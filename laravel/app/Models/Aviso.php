@@ -23,10 +23,9 @@ class Aviso extends Model {
         'fecha' => 'datetime',
     ];
 
-    public function tecnico() {
-        return $this->belongsTo(Tecnico::class);
-    }
-
+  // public function tecnico() {
+//     return $this->belongsTo(Tecnico::class);
+// }
     public function usuario() {
         return $this->belongsTo(User::class);
     }

@@ -10,8 +10,8 @@ class AdminController extends Controller {
 
     // Panel principal - listado de avisos
     public function index() {
-        $avisos = Aviso::with('tecnico')->where('estado', '!=', 'cancelada')->orderBy('fecha', 'desc')->get();
-        $tecnicos = \App\Models\Tecnico::all();
+        $avisos = Aviso::where('estado', '!=', 'cancelada')->orderBy('fecha', 'desc')->get();
+        $tecnicos = collect();
         return view('admin.panel', compact('avisos', 'tecnicos'));
     }
 

@@ -9,7 +9,7 @@ return new class extends Migration {
         Schema::create('comisions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aviso_id')->constrained('avisos')->onDelete('cascade');
-            $table->foreignId('gestora_id')->nullable()->constrained('gestoras')->nullOnDelete();
+            $table->unsignedBigInteger('gestora_id')->nullable();
             $table->decimal('importe', 8, 2)->default(0);
             $table->decimal('porcentaje', 5, 2)->default(5.00);
             $table->integer('mes');

@@ -9,8 +9,8 @@ return new class extends Migration {
         Schema::create('avisos', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 50)->unique();
-            $table->foreignId('usuario_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('tecnico_id')->nullable()->constrained('tecnicos')->nullOnDelete();
+            $table->unsignedBigInteger('usuario_id')->nullable();
+            $table->unsignedBigInteger('tecnico_id')->nullable();
             $table->string('tipo_servicio', 100)->nullable();
             $table->enum('urgencia', ['estandar', 'urgente'])->default('estandar');
             $table->datetime('fecha')->nullable();

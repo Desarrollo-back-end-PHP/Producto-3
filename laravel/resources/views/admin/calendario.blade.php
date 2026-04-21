@@ -7,7 +7,7 @@
 
 @section('scripts')
 <script>
-const avisos = @json($avisos->map(function($a) {
+const avisos = {!! json_encode($avisos->map(function($a) {
     return [
         'title' => $a->tipo_servicio . ' - ' . $a->codigo,
         'start' => $a->fecha,
@@ -20,7 +20,7 @@ const avisos = @json($avisos->map(function($a) {
             'urgencia'    => $a->urgencia,
         ]
     ];
-}));
+})->toArray()) !!};
 
 document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(document.getElementById('calendario'), {
