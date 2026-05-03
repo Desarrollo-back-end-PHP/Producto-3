@@ -23,11 +23,10 @@ class GestoraController extends Controller
             ->orderBy('fecha', 'desc')
             ->get();
 
-        // Comisiones agrupadas
+        // Comisiones agrupadas mes a mes
         $comisiones = Comision::where('gestora_id', $gestoraId)
-            ->where('estado', 'pendiente')
-            ->selectRaw('mes, anyo, SUM(importe) as total')
-            ->groupBy('mes', 'anyo')
+            ->selectRaw('mes, anyo, estado, SUM(importe) as total')
+            ->groupBy('mes', 'anyo', 'estado')
             ->orderBy('anyo', 'desc')
             ->orderBy('mes', 'desc')
             ->get();
@@ -63,11 +62,12 @@ class GestoraController extends Controller
 
         Aviso::create([
             'codigo'          => Aviso::generarCodigo(),
-            'especialidad_id' => $request->especialidad_id, // 🔥 importante
+            'especialidad_id' => $request->especialidad_id,
             'urgencia'        => $request->urgencia,
             'fecha'           => $request->fecha,
             'franja'          => $request->franja,
             'zona'            => $request->zona,
+            'precio'          => $request->precio ?? 100,
             'descripcion'     => $request->descripcion,
             'direccion'       => $request->direccion,
             'telefono'        => $request->telefono,

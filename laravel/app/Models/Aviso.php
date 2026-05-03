@@ -13,10 +13,12 @@ class Aviso extends Model
         'codigo',
         'usuario_id',
         'tecnico_id',
-        'especialidad_id', // 🔥 ESTE ES EL BUENO
+        'especialidad_id',
         'urgencia',
         'fecha',
         'franja',
+        'zona',
+        'precio',
         'descripcion',
         'direccion',
         'telefono',

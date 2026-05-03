@@ -94,7 +94,7 @@ Route::post('/perfil', [UserController::class, 'actualizarPerfil'])->name('perfi
         Route::get('/calendario', [AdminController::class, 'calendario'])->name('calendario');
         Route::get('/liquidaciones', [AdminController::class, 'liquidaciones'])->name('liquidaciones');
 
-        Route::post('/comisiones/pagar', [AdminController::class, 'pagarComisiones'])->name('comisiones.pagar');
+        Route::post('/comisiones/liquidar', [AdminController::class, 'liquidarComisiones'])->name('comisiones.liquidar');
 
         // 🔥 USUARIOS
         Route::get('/users', [UserController::class, 'index'])->name('users');

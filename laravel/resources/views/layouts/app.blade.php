@@ -8,11 +8,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        body { background-color: #f4f6f9; }
         nav { background: #2c3e50; }
         nav a { color: white !important; }
 
-        .urgente { background: #e74c3c; color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
-        .estandar { background: #27ae60; color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+        .urgente  { background: #e74c3c; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+        .estandar { background: #27ae60; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+
+        .card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,.1); border-radius: 8px; }
+        .card-header { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; font-size: 1rem; }
+
+        .table thead th { font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+
+        h1 { font-size: 1.6rem; color: #2c3e50; }
+        h2 { font-size: 1.4rem; color: #2c3e50; }
+
+        .badge-pendiente  { background-color: #f39c12; }
+        .badge-finalizado { background-color: #27ae60; }
+        .badge-cancelada  { background-color: #95a5a6; }
+        .badge-asignada   { background-color: #2980b9; }
     </style>
 </head>
 

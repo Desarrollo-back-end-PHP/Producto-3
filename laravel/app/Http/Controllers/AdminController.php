@@ -52,19 +52,20 @@ class AdminController extends Controller {
         }
 
         $aviso = Aviso::create([
-    'codigo' => Aviso::generarCodigo(),
-    'especialidad_id' => $request->especialidad_id,
-    'urgencia' => $request->urgencia,
-    'fecha' => \Carbon\Carbon::parse($request->fecha),
-    'franja' => $request->franja,
-    'zona' => $request->zona,
-    'descripcion' => $request->descripcion,
-    'direccion' => $request->direccion,
-    'telefono' => $request->telefono,
-    'estado' => 'pendiente',
-    'gestora_id' => $gestoraId,
-    'tecnico_id' => $request->tecnico_id,
-]);
+            'codigo'          => Aviso::generarCodigo(),
+            'especialidad_id' => $request->especialidad_id,
+            'urgencia'        => $request->urgencia,
+            'fecha'           => \Carbon\Carbon::parse($request->fecha),
+            'franja'          => $request->franja,
+            'zona'            => $request->zona,
+            'precio'          => $request->precio ?? 100,
+            'descripcion'     => $request->descripcion,
+            'direccion'       => $request->direccion,
+            'telefono'        => $request->telefono,
+            'estado'          => 'pendiente',
+            'gestora_id'      => $gestoraId,
+            'tecnico_id'      => $request->tecnico_id,
+        ]);
 
         // 🔔 Notificación si ya se asigna técnico al crear
         if ($request->tecnico_id) {
@@ -213,17 +214,16 @@ class AdminController extends Controller {
 
     // LIQUIDACIONES
     public function liquidaciones()
-{
-    $liquidaciones = Comision::with('gestora')
-        ->selectRaw('gestora_id, mes, anyo, SUM(importe) as total')
-        ->where('estado', 'pendiente') 
-        ->groupBy('gestora_id', 'mes', 'anyo')
-        ->orderBy('anyo', 'desc')
-        ->orderBy('mes', 'desc')
-        ->get();
+    {
+        $liquidaciones = Comision::with('gestora')
+            ->selectRaw('gestora_id, mes, anyo, estado, SUM(importe) as total')
+            ->groupBy('gestora_id', 'mes', 'anyo', 'estado')
+            ->orderBy('anyo', 'desc')
+            ->orderBy('mes', 'desc')
+            ->get();
 
-    return view('admin.liquidaciones', compact('liquidaciones'));
-}
+        return view('admin.liquidaciones', compact('liquidaciones'));
+    }
     //Liquidar comision 
     public function liquidarComisiones(Request $request)
 {
