@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Especialidad;
+use App\Models\User;
+use App\Models\Comision;
 
-class Aviso extends Model {
+class Aviso extends Model
+{
     protected $fillable = [
         'codigo',
         'usuario_id',
         'tecnico_id',
-        'tipo_servicio',
+        'especialidad_id', // 🔥 ESTE ES EL BUENO
         'urgencia',
         'fecha',
         'franja',
@@ -17,26 +21,40 @@ class Aviso extends Model {
         'direccion',
         'telefono',
         'estado',
+        'gestora_id',
     ];
 
     protected $casts = [
         'fecha' => 'datetime',
     ];
 
-  // public function tecnico() {
-//     return $this->belongsTo(Tecnico::class);
-// }
-    public function usuario() {
+    // 🔥 RELACIONES
+    public function especialidad()
+    {
+        return $this->belongsTo(Especialidad::class);
+    }
+
+    public function usuario()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function comision() {
+    public function tecnico()
+    {
+        return $this->belongsTo(User::class, 'tecnico_id');
+    }
+
+    public function comision()
+    {
         return $this->hasOne(Comision::class);
     }
 
-    public static function generarCodigo(): string {
+    // 🔥 GENERADOR DE CÓDIGO
+    public static function generarCodigo(): string
+    {
         $fecha = now()->format('Ymd');
         $count = self::whereDate('created_at', today())->count() + 1;
+
         return 'AV-' . $fecha . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 }

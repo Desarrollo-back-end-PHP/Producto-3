@@ -20,6 +20,6 @@ class Comision extends Model {
     }
 
     public function gestora() {
-        return $this->belongsTo(Gestora::class);
+        return $this->belongsTo(User::class, 'gestora_id');
     }
 }
