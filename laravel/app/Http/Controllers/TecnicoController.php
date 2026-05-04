@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Aviso;
-use Illuminate\Http\Request;
-use App\Models\Notificacion;
 use App\Models\Comision;
+use App\Models\Notificacion;
+use Illuminate\Http\Request;
 
 class TecnicoController extends Controller
 {
+    // PANEL TECNICO
     public function index()
     {
         $tecnicoId = auth()->id();
@@ -25,50 +26,44 @@ class TecnicoController extends Controller
         return view('tecnico.panel', compact('avisos', 'notificaciones'));
     }
 
+    // CAMBIAR ESTADO DE UN AVISO
     public function cambiarEstado(Request $request)
     {
         $aviso = Aviso::findOrFail($request->aviso_id);
 
-        // 🔒 Seguridad
+        // Un técnico solo puede cambiar el estado de sus propios avisos
         if ($aviso->tecnico_id !== auth()->id()) {
             abort(403);
         }
 
         $estadoAnterior = $aviso->estado;
+        $aviso->update(['estado' => $request->estado]);
 
-        $aviso->update([
-            'estado' => $request->estado
-        ]);
-
-        // 🔔 NOTIFICAR A GESTORA
+        // Notificar a la gestora si el estado cambia
         if ($estadoAnterior !== $request->estado && $aviso->gestora_id) {
             Notificacion::create([
                 'user_id' => $aviso->gestora_id,
                 'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
-                'leida' => 0
+                'leida'   => 0,
             ]);
         }
 
-        // 💰 GENERAR COMISIÓN
-        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado') {
+        // Generar comisión automáticamente al marcar como finalizado
+        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado' && $aviso->gestora_id) {
+            $precioBase = $aviso->precio ?? 100;
+            $porcentaje = 10;
 
-            if ($aviso->gestora_id) {
-
-                $precioBase = $aviso->precio ?? 100;
-                $porcentaje = 10;
-
-                Comision::create([
-                    'aviso_id'   => $aviso->id,
-                    'gestora_id' => $aviso->gestora_id,
-                    'importe'    => ($precioBase * $porcentaje) / 100,
-                    'porcentaje' => $porcentaje,
-                    'mes'        => now()->month,
-                    'anyo'       => now()->year,
-                    'estado'     => 'pendiente',
-                ]);
-            }
+            Comision::create([
+                'aviso_id'   => $aviso->id,
+                'gestora_id' => $aviso->gestora_id,
+                'importe'    => ($precioBase * $porcentaje) / 100,
+                'porcentaje' => $porcentaje,
+                'mes'        => now()->month,
+                'anyo'       => now()->year,
+                'estado'     => 'pendiente',
+            ]);
         }
 
-        return back()->with('success', 'Estado actualizado');
+        return back()->with('success', 'Estado actualizado.');
     }
 }

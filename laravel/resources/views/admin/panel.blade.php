@@ -7,18 +7,26 @@
 {{-- ========================= --}}
 {{-- ACCIONES RÁPIDAS --}}
 {{-- ========================= --}}
-<div class="mb-4 d-flex gap-2">
+<div class="mb-4 d-flex flex-wrap gap-2">
 
     <a href="{{ route('admin.users') }}" class="btn btn-dark">
-        👥 Usuarios
+        <i class="bi bi-people me-1"></i> Usuarios
     </a>
 
     <a href="{{ route('admin.calendario') }}" class="btn btn-outline-primary">
-        📅 Calendario
+        <i class="bi bi-calendar3 me-1"></i> Calendario
     </a>
 
     <a href="{{ route('admin.liquidaciones') }}" class="btn btn-outline-success">
-        💰 Liquidaciones
+        <i class="bi bi-cash-stack me-1"></i> Liquidaciones
+    </a>
+
+    <a href="{{ route('admin.tecnicos') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-tools me-1"></i> Técnicos
+    </a>
+
+    <a href="{{ route('admin.servicios') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-tags me-1"></i> Servicios
     </a>
 
 </div>
@@ -161,7 +169,19 @@
                         {{ \Carbon\Carbon::parse($aviso->fecha)->format('d/m/Y H:i') }}
                     </td>
 
-                    <td>{{ $aviso->estado }}</td>
+                    <td>
+                        @php
+                            $color = match($aviso->estado) {
+                                'pendiente'  => 'warning text-dark',
+                                'asignada'   => 'primary',
+                                'en_proceso' => 'info text-dark',
+                                'finalizado' => 'success',
+                                'cancelada'  => 'secondary',
+                                default      => 'secondary',
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $color }}">{{ ucfirst(str_replace('_', ' ', $aviso->estado)) }}</span>
+                    </td>
 
                     <td>
                         <form method="POST" action="{{ route('admin.asignarTecnico') }}" class="d-flex gap-1">
@@ -183,29 +203,34 @@
                     </td>
 
                     <td>
-                        <form method="POST" action="{{ route('admin.actualizar', $aviso->id) }}">
+                        <form id="form-estado-{{ $aviso->id }}"
+                              method="POST"
+                              action="{{ route('admin.actualizar', $aviso->id) }}">
                             @csrf
-
                             <select name="estado" class="form-select form-select-sm">
-                                <option value="pendiente">Pendiente</option>
-                                <option value="asignado">Asignado</option>
-                                <option value="en_proceso">En proceso</option>
-                                <option value="finalizado">Finalizado</option>
-                                <option value="cancelada">Cancelada</option>
+                                <option value="pendiente"  {{ $aviso->estado == 'pendiente'  ? 'selected' : '' }}>Pendiente</option>
+                                <option value="asignada"   {{ $aviso->estado == 'asignada'   ? 'selected' : '' }}>Asignada</option>
+                                <option value="en_proceso" {{ $aviso->estado == 'en_proceso' ? 'selected' : '' }}>En proceso</option>
+                                <option value="finalizado" {{ $aviso->estado == 'finalizado' ? 'selected' : '' }}>Finalizado</option>
+                                <option value="cancelada"  {{ $aviso->estado == 'cancelada'  ? 'selected' : '' }}>Cancelada</option>
                             </select>
-
-                            <button class="btn btn-sm btn-primary mt-1">
-                                Guardar
-                            </button>
                         </form>
                     </td>
 
-                    <td class="d-flex gap-1">
-                        <a href="{{ route('admin.cancelar', $aviso->id) }}"
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('¿Cancelar este aviso?')">
-                           Cancelar
-                        </a>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button type="submit"
+                                    form="form-estado-{{ $aviso->id }}"
+                                    class="btn btn-sm btn-primary">
+                                Guardar
+                            </button>
+                            <form method="POST"
+                                  action="{{ route('admin.cancelar', $aviso->id) }}"
+                                  onsubmit="return confirm('¿Cancelar el aviso {{ $aviso->codigo }}?')">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                            </form>
+                        </div>
                     </td>
 
                 </tr>

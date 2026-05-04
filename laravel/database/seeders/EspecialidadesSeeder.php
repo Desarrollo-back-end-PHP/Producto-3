@@ -24,9 +24,7 @@ class EspecialidadesSeeder extends Seeder
         ];
 
         foreach ($especialidades as $nombre) {
-            Especialidad::create([
-                'nombre' => $nombre
-            ]);
+            Especialidad::firstOrCreate(['nombre' => $nombre]);
         }
     }
 }

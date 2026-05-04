@@ -31,11 +31,11 @@ class GestoraController extends Controller
             ->orderBy('mes', 'desc')
             ->get();
 
-        // Técnicos disponibles
-        $tecnicos = User::where('rol', 'tecnico')->get();
+        // técnicos activos 
+        $tecnicos = User::where('rol', 'tecnico')->where('activo', 1)->get();
 
-        // 🔥 CLAVE: especialidades para el select
-        $especialidades = Especialidad::all();
+        // Especialidades para el select
+        $especialidades = Especialidad::orderBy('nombre')->get();
 
         return view('gestora.panel', compact(
             'avisos',
@@ -44,7 +44,6 @@ class GestoraController extends Controller
             'especialidades'
         ));
     }
-
 
     // =========================
     // CREAR AVISO
@@ -76,6 +75,25 @@ class GestoraController extends Controller
         ]);
 
         return redirect()->route('gestora.panel')
-            ->with('success', 'Aviso creado correctamente');
+            ->with('success', 'Aviso creado correctamente.');
+    }
+
+    // =========================
+    // CANCELAR AVISO PROPIO
+    // =========================
+    public function cancelarAviso($id)
+    {
+        // Solo puede cancelar sus propios avisos
+        $aviso = Aviso::where('id', $id)
+            ->where('gestora_id', auth()->id())
+            ->firstOrFail();
+
+        if ($aviso->estado === 'finalizado') {
+            return back()->with('error', 'No se puede cancelar un aviso finalizado.');
+        }
+
+        $aviso->update(['estado' => 'cancelada']);
+
+        return back()->with('success', 'Aviso cancelado.');
     }
 }
