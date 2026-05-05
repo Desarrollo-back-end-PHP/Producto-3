@@ -37,11 +37,18 @@ class GestoraController extends Controller
         // Especialidades para el select
         $especialidades = Especialidad::orderBy('nombre')->get();
 
+        // Zonas ya usadas (para el datalist de sugerencias)
+        $zonas = Aviso::whereNotNull('zona')
+            ->distinct()
+            ->orderBy('zona')
+            ->pluck('zona');
+
         return view('gestora.panel', compact(
             'avisos',
             'comisiones',
             'tecnicos',
-            'especialidades'
+            'especialidades',
+            'zonas'
         ));
     }
 

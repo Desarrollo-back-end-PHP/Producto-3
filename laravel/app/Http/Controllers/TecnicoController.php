@@ -9,6 +9,12 @@ use Illuminate\Http\Request;
 
 class TecnicoController extends Controller
 {
+    // Convierte 'en_proceso' en 'En proceso' para los mensajes
+    private function formatearEstado(string $estado): string
+    {
+        return ucfirst(str_replace('_', ' ', $estado));
+    }
+
     // PANEL TECNICO
     public function index()
     {
@@ -43,7 +49,7 @@ class TecnicoController extends Controller
         if ($estadoAnterior !== $request->estado && $aviso->gestora_id) {
             Notificacion::create([
                 'user_id' => $aviso->gestora_id,
-                'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
+                'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
                 'leida'   => 0,
             ]);
         }

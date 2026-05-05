@@ -133,24 +133,40 @@
                         </span>
                     @endif
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" style="min-width:280px;">
-                    <li class="px-3 py-2 text-muted small fw-bold border-bottom">Notificaciones</li>
-                    @forelse(auth()->user()->notificaciones->take(5) as $n)
-                        <li class="dropdown-item small py-2 {{ $n->leida ? 'text-muted' : 'fw-bold' }}">
+                <ul class="dropdown-menu dropdown-menu-end" style="min-width:300px;">
+                    <li class="px-3 py-2 text-muted small fw-bold border-bottom">
+                        Notificaciones nuevas
+                    </li>
+
+                    @php $noLeidas = auth()->user()->notificacionesNoLeidas->take(5); @endphp
+
+                    @forelse($noLeidas as $n)
+                        <li class="dropdown-item small py-2 fw-semibold">
                             <i class="bi bi-dot text-primary"></i> {{ $n->mensaje }}
                         </li>
                     @empty
-                        <li class="dropdown-item text-muted small py-3 text-center">Sin notificaciones</li>
+                        <li class="dropdown-item text-muted small py-3 text-center">
+                            <i class="bi bi-check2-all me-1"></i> Sin notificaciones nuevas
+                        </li>
                     @endforelse
+
                     <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item small text-center text-secondary"
+                           href="{{ route('notificaciones.index') }}">
+                            <i class="bi bi-clock-history me-1"></i> Ver historial completo
+                        </a>
+                    </li>
+                    @if(auth()->user()->notificacionesNoLeidas->count())
                     <li>
                         <form method="POST" action="{{ route('notificaciones.leidas') }}">
                             @csrf
-                            <button class="dropdown-item text-center text-primary small">
-                                Marcar todas como leídas
+                            <button class="dropdown-item small text-center text-primary">
+                                <i class="bi bi-check2-all me-1"></i> Marcar todas como leídas
                             </button>
                         </form>
                     </li>
+                    @endif
                 </ul>
             </li>
 

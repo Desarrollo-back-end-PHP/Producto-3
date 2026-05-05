@@ -60,7 +60,13 @@
 
                 <div class="col-md-3">
                     <label class="form-label small text-muted fw-semibold">Zona</label>
-                    <input type="text" name="zona" class="form-control" placeholder="Ej: Norte, Centro...">
+                    <input type="text" name="zona" class="form-control"
+                           list="lista-zonas" placeholder="Zona">
+                    <datalist id="lista-zonas">
+                        @foreach($zonas as $zona)
+                            <option value="{{ $zona }}">
+                        @endforeach
+                    </datalist>
                 </div>
 
                 <div class="col-md-2">

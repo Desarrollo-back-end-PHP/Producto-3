@@ -12,6 +12,12 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
+    // Convierte 'en_proceso' en 'En proceso' para los mensajes
+    private function formatearEstado(string $estado): string
+    {
+        return ucfirst(str_replace('_', ' ', $estado));
+    }
+
     // PANEL ADMIN
     public function index()
     {
@@ -84,14 +90,14 @@ class AdminController extends Controller
             if ($aviso->tecnico_id) {
                 Notificacion::create([
                     'user_id' => $aviso->tecnico_id,
-                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
+                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
                     'leida'   => 0,
                 ]);
             }
             if ($aviso->gestora_id) {
                 Notificacion::create([
                     'user_id' => $aviso->gestora_id,
-                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
+                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
                     'leida'   => 0,
                 ]);
             }

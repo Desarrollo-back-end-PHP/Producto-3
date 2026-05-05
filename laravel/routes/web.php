@@ -37,6 +37,12 @@ Route::post('/register', [UserController::class, 'store']);
 */
 Route::middleware(['auth'])->group(function () {
 
+    // Historial de notificaciones
+    Route::get('/notificaciones', function () {
+        $notificaciones = auth()->user()->notificaciones()->latest()->get();
+        return view('notificaciones.index', compact('notificaciones'));
+    })->name('notificaciones.index');
+
     // Marcar todas las notificaciones como leídas
     Route::post('/notificaciones/leidas', function () {
         auth()->user()->notificacionesNoLeidas()->update(['leida' => 1]);
