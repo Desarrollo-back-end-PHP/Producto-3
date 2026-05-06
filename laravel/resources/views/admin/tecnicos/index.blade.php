@@ -106,23 +106,23 @@
                                 <span class="badge bg-secondary">Baja</span>
                             @endif
                         </td>
-                        <td>
-                            <button type="submit" class="btn btn-success btn-sm">
-                                <i class="bi bi-check-lg me-1"></i> Editar
-                            </button>
-                        </td>
+                        <td class="d-flex gap-2">
+    <button type="submit" class="btn btn-success btn-sm">
+        Guardar
+    </button>
+
+    <form method="POST" action="{{ route('admin.tecnicos.baja', $tecnico->id) }}"
+        onsubmit="return confirm('{{ $tecnico->activo ? 'Dar de baja a ' : 'Reactivar a ' }}{{ addslashes($tecnico->name) }}?')">
+        @csrf
+        <button type="submit"
+            class="btn btn-sm {{ $tecnico->activo ? 'btn-outline-danger' : 'btn-outline-success' }}">
+            {{ $tecnico->activo ? 'Baja' : 'Activar' }}
+        </button>
+    </form>
+</td>
                     </form>
 
-                    <td>
-                        <form method="POST" action="{{ route('admin.tecnicos.baja', $tecnico->id) }}"
-                              onsubmit="return confirm('{{ $tecnico->activo ? 'Dar de baja a ' : 'Reactivar a ' }}{{ addslashes($tecnico->name) }}?')">
-                            @csrf
-                            <button type="submit"
-                                class="btn btn-sm {{ $tecnico->activo ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                                {{ $tecnico->activo ? 'Baja' : 'Activar' }}
-                            </button>
-                        </form>
-                    </td>
+                    
                 </tr>
                 @endforeach
             </tbody>

@@ -46,6 +46,11 @@ class Aviso extends Model
         return $this->belongsTo(User::class, 'tecnico_id');
     }
 
+    public function gestora()
+    {
+        return $this->belongsTo(User::class, 'gestora_id');
+    }
+
     public function comision()
     {
         return $this->hasOne(Comision::class);

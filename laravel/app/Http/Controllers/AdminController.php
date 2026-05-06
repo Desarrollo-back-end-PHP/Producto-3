@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    // Convierte 'en_proceso' en 'En proceso' para los mensajes
+    // formatter en_proceso
     private function formatearEstado(string $estado): string
     {
         return ucfirst(str_replace('_', ' ', $estado));
@@ -21,7 +21,7 @@ class AdminController extends Controller
     // PANEL ADMIN
     public function index()
     {
-        $avisos = Aviso::with('especialidad')
+        $avisos = Aviso::with(['especialidad', 'tecnico', 'gestora'])
             ->where('estado', '!=', 'cancelada')
             ->orderBy('fecha', 'desc')
             ->get();
@@ -62,7 +62,7 @@ class AdminController extends Controller
             'tecnico_id'      => $request->tecnico_id ?: null,
         ]);
 
-        // Notificar al técnico si se asigna al crear
+        // Notificar técnico si se asigna
         if ($aviso->tecnico_id) {
             Notificacion::create([
                 'user_id' => $aviso->tecnico_id,
@@ -103,20 +103,22 @@ class AdminController extends Controller
             }
         }
 
-        // Generar comisión automáticamente al marcar como finalizado
+        // Genero comisión al marcar como finalizado
         if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado' && $aviso->gestora_id) {
-            $precioBase = $aviso->precio ?? 100;
-            $porcentaje = 10;
+            if (!Comision::where('aviso_id', $aviso->id)->exists()) {
+                $precioBase = $aviso->precio ?? 100;
+                $porcentaje = 10;
 
-            Comision::create([
-                'aviso_id'   => $aviso->id,
-                'gestora_id' => $aviso->gestora_id,
-                'importe'    => ($precioBase * $porcentaje) / 100,
-                'porcentaje' => $porcentaje,
-                'mes'        => now()->month,
-                'anyo'       => now()->year,
-                'estado'     => 'pendiente',
-            ]);
+                Comision::create([
+                    'aviso_id'   => $aviso->id,
+                    'gestora_id' => $aviso->gestora_id,
+                    'importe'    => ($precioBase * $porcentaje) / 100,
+                    'porcentaje' => $porcentaje,
+                    'mes'        => now()->month,
+                    'anyo'       => now()->year,
+                    'estado'     => 'pendiente',
+                ]);
+            }
         }
 
         return redirect()->route('admin.panel')->with('success', 'Aviso actualizado correctamente.');

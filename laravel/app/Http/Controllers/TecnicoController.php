@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class TecnicoController extends Controller
 {
-    // Convierte 'en_proceso' en 'En proceso' para los mensajes
+    // formatter en_proceso
     private function formatearEstado(string $estado): string
     {
         return ucfirst(str_replace('_', ' ', $estado));
@@ -54,20 +54,22 @@ class TecnicoController extends Controller
             ]);
         }
 
-        // Generar comisión automáticamente al marcar como finalizado
+        // Genero comisión al marcar como finalizado
         if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado' && $aviso->gestora_id) {
-            $precioBase = $aviso->precio ?? 100;
-            $porcentaje = 10;
+            if (!Comision::where('aviso_id', $aviso->id)->exists()) {
+                $precioBase = $aviso->precio ?? 100;
+                $porcentaje = 10;
 
-            Comision::create([
-                'aviso_id'   => $aviso->id,
-                'gestora_id' => $aviso->gestora_id,
-                'importe'    => ($precioBase * $porcentaje) / 100,
-                'porcentaje' => $porcentaje,
-                'mes'        => now()->month,
-                'anyo'       => now()->year,
-                'estado'     => 'pendiente',
-            ]);
+                Comision::create([
+                    'aviso_id'   => $aviso->id,
+                    'gestora_id' => $aviso->gestora_id,
+                    'importe'    => ($precioBase * $porcentaje) / 100,
+                    'porcentaje' => $porcentaje,
+                    'mes'        => now()->month,
+                    'anyo'       => now()->year,
+                    'estado'     => 'pendiente',
+                ]);
+            }
         }
 
         return back()->with('success', 'Estado actualizado.');
