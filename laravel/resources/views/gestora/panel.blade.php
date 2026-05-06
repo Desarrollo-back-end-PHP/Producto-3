@@ -59,14 +59,13 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label small text-muted fw-semibold">Zona</label>
-                    <input type="text" name="zona" class="form-control"
-                           list="lista-zonas" placeholder="Zona">
-                    <datalist id="lista-zonas">
+                    <label class="form-label small text-muted fw-semibold">Zona *</label>
+                    <select name="zona" class="form-select">
+                        <option value="">Zona</option>
                         @foreach($zonas as $zona)
-                            <option value="{{ $zona }}">
+                            <option value="{{ $zona }}">{{ $zona }}</option>
                         @endforeach
-                    </datalist>
+                    </select>
                 </div>
 
                 <div class="col-md-2">

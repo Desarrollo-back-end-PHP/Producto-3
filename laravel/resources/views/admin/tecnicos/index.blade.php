@@ -74,59 +74,69 @@
             <tbody>
                 @foreach($tecnicos as $tecnico)
                 <tr>
-                    <form method="POST" action="{{ route('admin.tecnicos.update', $tecnico->id) }}">
-                        @csrf
-                        <td>
-                            <input type="text" name="name" value="{{ $tecnico->name }}"
-                                   class="form-control form-control-sm">
-                        </td>
-                        <td>
-                            <input type="email" name="email" value="{{ $tecnico->email }}"
-                                   class="form-control form-control-sm">
-                        </td>
-                        <td>
-                            <select name="especialidad_id" class="form-select form-select-sm">
-                                <option value="">Sin especialidad</option>
-                                @foreach($especialidades as $esp)
-                                    <option value="{{ $esp->id }}"
-                                        {{ $tecnico->especialidad_id == $esp->id ? 'selected' : '' }}>
-                                        {{ $esp->nombre }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="telefono" value="{{ $tecnico->telefono }}"
-                                   class="form-control form-control-sm" placeholder="Teléfono">
-                        </td>
-                        <td>
-                            @if($tecnico->activo)
-                                <span class="badge bg-success">Activo</span>
-                            @else
-                                <span class="badge bg-secondary">Baja</span>
-                            @endif
-                        </td>
-                        <td class="d-flex gap-2">
-    <button type="submit" class="btn btn-success btn-sm">
-        Guardar
-    </button>
-
-    <form method="POST" action="{{ route('admin.tecnicos.baja', $tecnico->id) }}"
-        onsubmit="return confirm('{{ $tecnico->activo ? 'Dar de baja a ' : 'Reactivar a ' }}{{ addslashes($tecnico->name) }}?')">
-        @csrf
-        <button type="submit"
-            class="btn btn-sm {{ $tecnico->activo ? 'btn-outline-danger' : 'btn-outline-success' }}">
-            {{ $tecnico->activo ? 'Baja' : 'Activar' }}
-        </button>
-    </form>
-</td>
-                    </form>
-
-                    
+                    <td>
+                        <input type="text" name="name" value="{{ $tecnico->name }}"
+                               class="form-control form-control-sm"
+                               form="upd-{{ $tecnico->id }}">
+                    </td>
+                    <td>
+                        <input type="email" name="email" value="{{ $tecnico->email }}"
+                               class="form-control form-control-sm"
+                               form="upd-{{ $tecnico->id }}">
+                    </td>
+                    <td>
+                        <select name="especialidad_id" class="form-select form-select-sm"
+                                form="upd-{{ $tecnico->id }}">
+                            <option value="">Sin especialidad</option>
+                            @foreach($especialidades as $esp)
+                                <option value="{{ $esp->id }}"
+                                    {{ $tecnico->especialidad_id == $esp->id ? 'selected' : '' }}>
+                                    {{ $esp->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="telefono" value="{{ $tecnico->telefono }}"
+                               class="form-control form-control-sm" placeholder="Teléfono"
+                               form="upd-{{ $tecnico->id }}">
+                    </td>
+                    <td>
+                        @if($tecnico->activo)
+                            <span class="badge bg-success">Activo</span>
+                        @else
+                            <span class="badge bg-secondary">Baja</span>
+                        @endif
+                    </td>
+                    <td class="d-flex gap-2">
+                        <button type="submit" form="upd-{{ $tecnico->id }}"
+                                class="btn btn-success btn-sm">
+                            Guardar
+                        </button>
+                        <form method="POST" action="{{ route('admin.tecnicos.baja', $tecnico->id) }}"
+                              onsubmit="return confirm('{{ $tecnico->activo ? 'Dar de baja a ' : 'Reactivar a ' }}{{ addslashes($tecnico->name) }}?')">
+                            @csrf
+                            <button type="submit"
+                                    class="btn btn-sm {{ $tecnico->activo ? 'btn-outline-danger' : 'btn-outline-success' }}">
+                                {{ $tecnico->activo ? 'Baja' : 'Activar' }}
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+
+        {{-- Formularios de actualización, referenciados por form="upd-X" en los inputs --}}
+        @foreach($tecnicos as $tecnico)
+        <form id="upd-{{ $tecnico->id }}"
+              method="POST"
+              action="{{ route('admin.tecnicos.update', $tecnico->id) }}"
+              style="display:none">
+            @csrf
+        </form>
+        @endforeach
+
         @endif
     </div>
 </div>
