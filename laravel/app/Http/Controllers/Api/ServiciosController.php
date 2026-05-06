@@ -9,21 +9,28 @@ class ServiciosController extends Controller
 {
     public function zonas()
     {
-        $total = Aviso::count();
+        // Solo contamos servicios realizados (finalizados)
+        $total = Aviso::where('estado', 'finalizado')->count();
 
-        $zonas = Aviso::selectRaw('zona, COUNT(*) as total_servicios')
+        $zonas = Aviso::where('estado', 'finalizado')
+            ->whereNotNull('zona')
+            ->selectRaw('zona, COUNT(*) as total_servicios')
             ->groupBy('zona')
+            ->orderBy('total_servicios', 'desc')
             ->get()
-            ->map(function ($zona) use ($total) {
+            ->map(function ($item) use ($total) {
                 return [
-                    'zona' => $zona->zona,
-                    'total_servicios' => $zona->total_servicios,
-                    'porcentaje' => $total > 0 
-                        ? round(($zona->total_servicios / $total) * 100, 2)
-                        : 0
+                    'zona'             => $item->zona,
+                    'total_servicios'  => $item->total_servicios,
+                    'porcentaje'       => $total > 0
+                        ? round(($item->total_servicios / $total) * 100, 2)
+                        : 0,
                 ];
             });
 
-        return response()->json($zonas);
+        return response()->json([
+            'total_global' => $total,
+            'zonas'        => $zonas,
+        ]);
     }
 }

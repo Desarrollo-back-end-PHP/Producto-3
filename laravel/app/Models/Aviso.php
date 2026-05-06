@@ -13,10 +13,12 @@ class Aviso extends Model
         'codigo',
         'usuario_id',
         'tecnico_id',
-        'especialidad_id', // 🔥 ESTE ES EL BUENO
+        'especialidad_id',
         'urgencia',
         'fecha',
         'franja',
+        'zona',
+        'precio',
         'descripcion',
         'direccion',
         'telefono',
@@ -42,6 +44,11 @@ class Aviso extends Model
     public function tecnico()
     {
         return $this->belongsTo(User::class, 'tecnico_id');
+    }
+
+    public function gestora()
+    {
+        return $this->belongsTo(User::class, 'gestora_id');
     }
 
     public function comision()
