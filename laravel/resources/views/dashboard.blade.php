@@ -1,17 +1,34 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
-                </div>
-            </div>
-        </div>
+@section('content')
+
+<h1 class="mb-4">Panel de Cliente</h1>
+
+<div class="card">
+    <div class="card-body">
+
+        <h4 class="mb-3">
+            👋 Bienvenido, {{ auth()->user()->name }}
+        </h4>
+
+        <p><strong>Email:</strong> {{ auth()->user()->email }}</p>
+        <p><strong>Rol:</strong> {{ auth()->user()->rol }}</p>
+
+        <hr>
+
+        <a href="{{ route('perfil') }}" class="btn btn-primary">
+            Editar Perfil
+        </a>
+
+        <a href="{{ route('incidencias.index') }}" class="btn btn-outline-primary">
+            Mis Avisos
+        </a>
+
+        <a href="{{ route('incidencias.create') }}" class="btn btn-outline-success">
+            Nueva Solicitud
+        </a>
+
     </div>
-</x-app-layout>
+</div>
+
+@endsection

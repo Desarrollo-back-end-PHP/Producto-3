@@ -14,6 +14,24 @@ use Illuminate\Notifications\Notifiable;
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'rol'
+];
+public function notificaciones()
+{
+    return $this->hasMany(Notificacion::class, 'user_id')
+        ->latest();
+}
+
+public function notificacionesNoLeidas()
+{
+    return $this->hasMany(Notificacion::class, 'user_id')
+        ->where('leida', 0);
+        
+}
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

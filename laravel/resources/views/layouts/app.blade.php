@@ -1,35 +1,101 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReparaYa</title>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <style>
+        nav { background: #2c3e50; }
+        nav a { color: white !important; }
+        .urgente { background: #e74c3c; color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+        .estandar { background: #27ae60; color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+    </style>
+</head>
 
-        <!-- Bootstrap -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body>
-        <div class="min-vh-100 bg-light">
-            @include('layouts.navigation')
+<body>
 
-            @isset($header)
-                <header class="bg-white shadow-sm py-3 px-4 mb-4">
-                    <div class="container">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+<nav class="navbar navbar-expand-lg px-4">
+    <a class="navbar-brand text-white fw-bold" href="{{ route('dashboard') }}">
+        ReparaYa
+    </a>
 
-            <main class="container">
-                {{ $slot }}
-            </main>
+    <div class="ms-auto d-flex align-items-center gap-3">
+
+        @auth
+            @if(auth()->user()->rol === 'admin')
+                <a class="nav-link text-white" href="{{ route('admin.panel') }}">Panel Admin</a>
+            @endif
+            @if(auth()->user()->rol === 'gestora')
+                <a class="nav-link text-white" href="{{ route('gestora.panel') }}">Panel Gestora</a>
+            @endif
+            @if(auth()->user()->rol === 'tecnico')
+                <a class="nav-link text-white" href="{{ route('tecnico.panel') }}">Panel Técnico</a>
+            @endif
+            @if(auth()->user()->rol === 'cliente')
+                <a class="nav-link text-white" href="{{ route('incidencias.index') }}">Mis Avisos</a>
+                <a class="nav-link text-white" href="{{ route('incidencias.create') }}">Nueva Solicitud</a>
+            @endif
+        @endauth
+
+        @auth
+        <div class="dropdown">
+            <a class="nav-link position-relative text-white" data-bs-toggle="dropdown" style="cursor:pointer;">
+                🔔
+                @if(auth()->user()->notificacionesNoLeidas->count())
+                    <span class="position-absolute top-0 start-100 translate-middle badge bg-danger">
+                        {{ auth()->user()->notificacionesNoLeidas->count() }}
+                    </span>
+                @endif
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                @forelse(auth()->user()->notificaciones->take(5) as $n)
+                    <li class="dropdown-item small {{ $n->leida ? '' : 'fw-bold bg-light' }}">
+                        {{ $n->mensaje }}
+                    </li>
+                @empty
+                    <li class="dropdown-item">Sin notificaciones</li>
+                @endforelse
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form method="POST" action="{{ route('notificaciones.leidas') }}">
+                        @csrf
+                        <button class="dropdown-item text-center text-primary">
+                            Marcar todas como leídas
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+        @endauth
+
+        @auth
+        <a href="{{ route('perfil') }}" class="btn btn-sm btn-outline-light">Perfil</a>
+        @endauth
+
+        @auth
+        <form method="POST" action="{{ route('logout') }}" class="mb-0">
+            @csrf
+            <button class="btn btn-sm btn-light">Salir</button>
+        </form>
+        @endauth
+
+    </div>
+</nav>
+
+<div class="container mt-4">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @yield('content')
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+@yield('scripts')
+
+</body>
 </html>
