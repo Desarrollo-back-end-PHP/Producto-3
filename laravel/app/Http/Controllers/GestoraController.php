@@ -25,27 +25,32 @@ class GestoraController extends Controller
 
         // Comisiones agrupadas
         $comisiones = Comision::where('gestora_id', $gestoraId)
-            ->where('estado', 'pendiente')
-            ->selectRaw('mes, anyo, SUM(importe) as total')
-            ->groupBy('mes', 'anyo')
+            ->selectRaw('mes, anyo, estado, SUM(importe) as total')
+            ->groupBy('mes', 'anyo', 'estado')
             ->orderBy('anyo', 'desc')
             ->orderBy('mes', 'desc')
             ->get();
 
         // Técnicos disponibles
-        $tecnicos = User::where('rol', 'tecnico')->get();
+        $tecnicos = User::where('rol', 'tecnico')->where('activo', 1)->get();
 
-        // 🔥 CLAVE: especialidades para el select
-        $especialidades = Especialidad::all();
+        // Especialidades para el select
+        $especialidades = Especialidad::orderBy('nombre')->get();
+
+        // Zonas ya usadas
+        $zonas = Aviso::whereNotNull('zona')
+            ->distinct()
+            ->orderBy('zona')
+            ->pluck('zona');
 
         return view('gestora.panel', compact(
             'avisos',
             'comisiones',
             'tecnicos',
-            'especialidades'
+            'especialidades',
+            'zonas'
         ));
     }
-
 
     // =========================
     // CREAR AVISO
@@ -68,6 +73,7 @@ class GestoraController extends Controller
             'fecha'           => $request->fecha,
             'franja'          => $request->franja,
             'zona'            => $request->zona,
+            'precio'          => $request->precio ?? 100,
             'descripcion'     => $request->descripcion,
             'direccion'       => $request->direccion,
             'telefono'        => $request->telefono,
@@ -76,6 +82,25 @@ class GestoraController extends Controller
         ]);
 
         return redirect()->route('gestora.panel')
-            ->with('success', 'Aviso creado correctamente');
+            ->with('success', 'Aviso creado correctamente.');
+    }
+
+    // =========================
+    // CANCELAR AVISO PROPIO
+    // =========================
+    public function cancelarAviso($id)
+    {
+        // Solo cancelar sus propios avisos
+        $aviso = Aviso::where('id', $id)
+            ->where('gestora_id', auth()->id())
+            ->firstOrFail();
+
+        if ($aviso->estado === 'finalizado') {
+            return back()->with('error', 'No se puede cancelar un aviso finalizado.');
+        }
+
+        $aviso->update(['estado' => 'cancelada']);
+
+        return back()->with('success', 'Aviso cancelado.');
     }
 }

@@ -7,21 +7,29 @@ use App\Models\Comision;
 use App\Models\User;
 use App\Models\Notificacion;
 use App\Models\Especialidad;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
-class AdminController extends Controller {
+class AdminController extends Controller
+{
+    // formatter en_proceso
+    private function formatearEstado(string $estado): string
+    {
+        return ucfirst(str_replace('_', ' ', $estado));
+    }
 
     // PANEL ADMIN
-    public function index() {
-
-        $avisos = Aviso::with('especialidad')
+    public function index()
+    {
+        $avisos = Aviso::with(['especialidad', 'tecnico', 'gestora'])
             ->where('estado', '!=', 'cancelada')
             ->orderBy('fecha', 'desc')
             ->get();
 
-        $tecnicos = User::where('rol', 'tecnico')->get();
+        // Solo técnicos activos para los desplegables
+        $tecnicos = User::where('rol', 'tecnico')->where('activo', 1)->get();
         $gestoras = User::where('rol', 'gestora')->get();
-        $especialidades = Especialidad::all();
+        $especialidades = Especialidad::orderBy('nombre')->get();
 
         return view('admin.panel', compact(
             'avisos',
@@ -43,56 +51,41 @@ class AdminController extends Controller {
             'telefono'        => 'required|string|max:20',
         ]);
 
-        $gestoraId = null;
-
-        if (auth()->user()->rol === 'gestora') {
-            $gestoraId = auth()->id();
-        } elseif ($request->filled('gestora_id')) {
-            $gestoraId = $request->gestora_id;
-        }
-
         $aviso = Aviso::create([
-    'codigo' => Aviso::generarCodigo(),
-    'especialidad_id' => $request->especialidad_id,
-    'urgencia' => $request->urgencia,
-    'fecha' => \Carbon\Carbon::parse($request->fecha),
-    'franja' => $request->franja,
-    'zona' => $request->zona,
-    'descripcion' => $request->descripcion,
-    'direccion' => $request->direccion,
-    'telefono' => $request->telefono,
-    'estado' => 'pendiente',
-    'gestora_id' => $gestoraId,
-    'tecnico_id' => $request->tecnico_id,
-]);
+            'codigo'          => Aviso::generarCodigo(),
+            'especialidad_id' => $request->especialidad_id,
+            'urgencia'        => $request->urgencia,
+            'fecha'           => \Carbon\Carbon::parse($request->fecha),
+            'franja'          => $request->franja,
+            'zona'            => $request->zona,
+            'precio'          => $request->precio ?? 100,
+            'descripcion'     => $request->descripcion,
+            'direccion'       => $request->direccion,
+            'telefono'        => $request->telefono,
+            'estado'          => 'pendiente',
+            'gestora_id'      => $request->gestora_id ?: null,
+            'tecnico_id'      => $request->tecnico_id ?: null,
+        ]);
 
         // 🔔 Notificación si ya se asigna técnico al crear
-        if ($request->tecnico_id) {
+        if ($aviso->tecnico_id) {
             Notificacion::create([
-                'user_id' => $request->tecnico_id,
+                'user_id' => $aviso->tecnico_id,
                 'mensaje' => "Se te ha asignado el aviso {$aviso->codigo}",
-                'leida'   => 0
+                'leida'   => 0,
             ]);
         }
 
-        return redirect()->route('admin.panel')
-            ->with('success', 'Aviso creado correctamente.');
+        return redirect()->route('admin.panel')->with('success', 'Aviso creado correctamente.');
     }
 
-    // EDITAR
-    public function editar($id) {
-        $aviso = Aviso::findOrFail($id);
-        return view('admin.detalle_aviso', compact('aviso'));
-    }
-
-    // ACTUALIZAR
+    // ACTUALIZAR ESTADO Y DATOS DE UN AVISO
     public function actualizar(Request $request, $id)
     {
         $aviso = Aviso::findOrFail($id);
-
         $estadoAnterior = $aviso->estado;
 
-        $aviso->update($request->only([
+       $aviso->update($request->only([
             'urgencia',
             'fecha',
             'franja',
@@ -100,34 +93,30 @@ class AdminController extends Controller {
             'descripcion',
             'direccion',
             'telefono',
-            'estado'
+            'estado',
         ]));
 
         // 🔔 NOTIFICACIONES
         if ($request->estado && $estadoAnterior !== $request->estado) {
-
             if ($aviso->tecnico_id) {
                 Notificacion::create([
                     'user_id' => $aviso->tecnico_id,
-                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
-                    'leida' => 0
+                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
+                    'leida'   => 0,
                 ]);
             }
-
             if ($aviso->gestora_id) {
                 Notificacion::create([
                     'user_id' => $aviso->gestora_id,
-                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
-                    'leida' => 0
+                    'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
+                    'leida'   => 0,
                 ]);
             }
         }
 
-        // 💰 comisión al finalizar
-        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado') {
-
-            if ($aviso->gestora_id) {
-
+        // Genero comisión al marcar como finalizado
+        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado' && $aviso->gestora_id) {
+            if (!Comision::where('aviso_id', $aviso->id)->exists()) {
                 $precioBase = $aviso->precio ?? 100;
                 $porcentaje = 10;
 
@@ -143,98 +132,163 @@ class AdminController extends Controller {
             }
         }
 
-        return redirect()->route('admin.panel')
-            ->with('success', 'Aviso actualizado correctamente.');
+        return redirect()->route('admin.panel')->with('success', 'Aviso actualizado correctamente.');
     }
 
-    // CANCELAR
-    public function cancelar($id) {
-
+    // CANCELAR AVISO
+    public function cancelar($id)
+    {
         $aviso = Aviso::findOrFail($id);
+        $aviso->update(['estado' => 'cancelada']);
 
-        $aviso->update([
-            'estado' => 'cancelada'
-        ]);
-
-        return redirect()->route('admin.panel')
-            ->with('success', 'Aviso cancelado.');
+        return redirect()->route('admin.panel')->with('success', 'Aviso cancelado.');
     }
 
-    // ASIGNAR TECNICO
-   public function asignarTecnico(Request $request)
-{
-    $aviso = Aviso::findOrFail($request->aviso_id);
+    // ASIGNAR TECNICO A UN AVISO
+    public function asignarTecnico(Request $request)
+    {
+        $aviso = Aviso::findOrFail($request->aviso_id);
 
-    // 🔐 PROTECCIÓN PARA GESTORA
-    if (auth()->user()->rol === 'gestora' && $aviso->gestora_id !== auth()->id()) {
-        abort(403);
+        // Una gestora solo puede asignar técnicos a sus propios avisos
+        if (auth()->user()->rol === 'gestora' && $aviso->gestora_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $aviso->update(['tecnico_id' => $request->tecnico_id]);
+
+        if ($request->tecnico_id) {
+            Notificacion::create([
+                'user_id' => $request->tecnico_id,
+                'mensaje' => "Se te ha asignado el aviso {$aviso->codigo}",
+                'leida'   => 0,
+            ]);
+        }
+
+        return back()->with('success', 'Técnico asignado correctamente.');
     }
-
-    $aviso->update([
-        'tecnico_id' => $request->tecnico_id
-    ]);
-
-    // 🔔 NOTIFICACIÓN
-    if ($request->tecnico_id) {
-        Notificacion::create([
-            'user_id' => $request->tecnico_id,
-            'mensaje' => "Se te ha asignado el aviso {$aviso->codigo}",
-            'leida' => 0
-        ]);
-    }
-
-    return back()->with('success', 'Técnico asignado correctamente.');
-}
 
     // CALENDARIO
-   public function calendario()
-{
-    $avisos = \App\Models\Aviso::with('especialidad')->get();
+    public function calendario()
+    {
+        $avisos = Aviso::with('especialidad')->get();
 
-    $eventos = $avisos->map(function($a) {
-        return [
-            'title' => ($a->especialidad->nombre ?? 'N/A') . ' - ' . $a->codigo,
-            'start' => $a->fecha,
-            'color' => $a->urgencia === 'urgente' ? '#e74c3c' : '#27ae60',
-            'extendedProps' => [
-                'descripcion' => $a->descripcion,
-                'direccion'   => $a->direccion,
-                'telefono'    => $a->telefono,
-                'estado'      => $a->estado,
-                'urgencia'    => $a->urgencia,
-            ]
-        ];
-    });
+        $eventos = $avisos->map(function ($aviso) {
+            return [
+                'title' => ($aviso->especialidad->nombre ?? 'N/A') . ' - ' . $aviso->codigo,
+                'start' => $aviso->fecha,
+                'color' => $aviso->urgencia === 'urgente' ? '#e74c3c' : '#27ae60',
+                'extendedProps' => [
+                    'descripcion' => $aviso->descripcion,
+                    'direccion'   => $aviso->direccion,
+                    'telefono'    => $aviso->telefono,
+                    'estado'      => $aviso->estado,
+                    'urgencia'    => $aviso->urgencia,
+                ],
+            ];
+        });
 
-    return view('admin.calendario', [
-        'eventos' => $eventos
-    ]);
-}
+        return view('admin.calendario', ['eventos' => $eventos]);
+    }
 
     // LIQUIDACIONES
     public function liquidaciones()
-{
-    $liquidaciones = Comision::with('gestora')
-        ->selectRaw('gestora_id, mes, anyo, SUM(importe) as total')
-        ->where('estado', 'pendiente') 
-        ->groupBy('gestora_id', 'mes', 'anyo')
-        ->orderBy('anyo', 'desc')
-        ->orderBy('mes', 'desc')
-        ->get();
+    {
+        $liquidaciones = Comision::with('gestora')
+            ->selectRaw('gestora_id, mes, anyo, estado, SUM(importe) as total')
+            ->groupBy('gestora_id', 'mes', 'anyo', 'estado')
+            ->orderBy('anyo', 'desc')
+            ->orderBy('mes', 'desc')
+            ->get();
 
-    return view('admin.liquidaciones', compact('liquidaciones'));
-}
-    //Liquidar comision 
+        return view('admin.liquidaciones', compact('liquidaciones'));
+    }
+
+    // MARCAR COMISIONES COMO LIQUIDADAS
     public function liquidarComisiones(Request $request)
-{
-    Comision::where('gestora_id', $request->gestora_id)
-        ->where('mes', $request->mes)
-        ->where('anyo', $request->anyo)
-        ->where('estado', 'pendiente')
-        ->update([
-            'estado' => 'liquidada'
+    {
+        Comision::where('gestora_id', $request->gestora_id)
+            ->where('mes', $request->mes)
+            ->where('anyo', $request->anyo)
+            ->where('estado', 'pendiente')
+            ->update(['estado' => 'liquidada']);
+
+        return back()->with('success', 'Comisiones liquidadas correctamente.');
+    }
+
+    // LISTAR TECNICOS
+    public function tecnicos()
+    {
+        $tecnicos = User::where('rol', 'tecnico')
+            ->with('especialidad')
+            ->orderBy('name')
+            ->get();
+
+        $especialidades = Especialidad::orderBy('nombre')->get();
+
+        return view('admin.tecnicos.index', compact('tecnicos', 'especialidades'));
+    }
+
+    // AÑADIR TECNICO
+    public function storeTecnico(Request $request)
+    {
+        $request->validate([
+            'name'            => 'required|string|max:100',
+            'email'           => 'required|email|unique:users,email',
+            'especialidad_id' => 'nullable|exists:especialidades,id',
+            'telefono'        => 'nullable|string|max:20',
+            'password'        => 'required|min:6',
         ]);
 
-    return back()->with('success', 'Comisiones liquidadas correctamente');
-}
+        User::create([
+            'name'            => $request->name,
+            'email'           => $request->email,
+            'password'        => Hash::make($request->password),
+            'rol'             => 'tecnico',
+            'telefono'        => $request->telefono,
+            'especialidad_id' => $request->especialidad_id ?: null,
+            'activo'          => 1,
+        ]);
+
+        return redirect()->route('admin.tecnicos')->with('success', 'Técnico añadido correctamente.');
+    }
+
+    // EDITAR TECNICO
+    public function updateTecnico(Request $request, $id)
+    {
+        $tecnico = User::findOrFail($id);
+
+        $request->validate([
+            'name'            => 'required|string|max:100',
+            'email'           => 'required|email|unique:users,email,' . $id,
+            'telefono'        => 'nullable|string|max:20',
+            'especialidad_id' => 'nullable|exists:especialidades,id',
+            'password'        => 'nullable|min:6',
+        ]);
+
+        $data = [
+            'name'            => $request->name,
+            'email'           => $request->email,
+            'telefono'        => $request->telefono,
+            'especialidad_id' => $request->especialidad_id ?: null,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $tecnico->update($data);
+
+        return back()->with('success', 'Técnico actualizado correctamente.');
+    }
+
+    // DAR DE BAJA O REACTIVAR TECNICO
+    public function darDeBaja($id)
+    {
+        $tecnico = User::findOrFail($id);
+        $nuevoEstado = $tecnico->activo ? 0 : 1;
+        $tecnico->update(['activo' => $nuevoEstado]);
+
+        $mensaje = $nuevoEstado ? 'Técnico reactivado.' : 'Técnico dado de baja.';
+        return back()->with('success', $mensaje);
+    }
 }

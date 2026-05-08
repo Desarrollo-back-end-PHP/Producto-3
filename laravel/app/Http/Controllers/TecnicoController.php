@@ -9,6 +9,13 @@ use App\Models\Comision;
 
 class TecnicoController extends Controller
 {
+    // formatter en_proceso
+    private function formatearEstado(string $estado): string
+    {
+        return ucfirst(str_replace('_', ' ', $estado));
+    }
+
+    // PANEL TECNICO
     public function index()
     {
         $tecnicoId = auth()->id();
@@ -35,7 +42,6 @@ class TecnicoController extends Controller
         }
 
         $estadoAnterior = $aviso->estado;
-
         $aviso->update([
             'estado' => $request->estado
         ]);
@@ -44,16 +50,14 @@ class TecnicoController extends Controller
         if ($estadoAnterior !== $request->estado && $aviso->gestora_id) {
             Notificacion::create([
                 'user_id' => $aviso->gestora_id,
-                'mensaje' => "El aviso {$aviso->codigo} cambió a {$request->estado}",
-                'leida' => 0
+                'mensaje' => "El aviso {$aviso->codigo} cambió a {$this->formatearEstado($request->estado)}",
+                'leida'   => 0,
             ]);
         }
 
         // 💰 GENERAR COMISIÓN
-        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado') {
-
-            if ($aviso->gestora_id) {
-
+        if ($estadoAnterior !== 'finalizado' && $request->estado === 'finalizado' && $aviso->gestora_id) {
+            if (!Comision::where('aviso_id', $aviso->id)->exists()) {
                 $precioBase = $aviso->precio ?? 100;
                 $porcentaje = 10;
 

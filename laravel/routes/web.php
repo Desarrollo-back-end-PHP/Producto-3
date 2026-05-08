@@ -9,44 +9,27 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GestoraController;
 use App\Http\Controllers\TecnicoController;
 
-/*
-|--------------------------------------------------------------------------
-| HOME
-|--------------------------------------------------------------------------
-*/
 Route::get('/', function () {
-    return redirect('/login');
-});
+    if (auth()->check()) {
+        return redirect('/dashboard');
+    }
+    return view('welcome');
+})->name('home');
 
-/*
-|--------------------------------------------------------------------------
-| LOGIN
-|--------------------------------------------------------------------------
-*/
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-/*
-|--------------------------------------------------------------------------
-| LOGOUT
-|--------------------------------------------------------------------------
-*/
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-/*
-|--------------------------------------------------------------------------
-| REGISTRO
-|--------------------------------------------------------------------------
-*/
 Route::get('/register', [UserController::class, 'create'])->name('register');
 Route::post('/register', [UserController::class, 'store']);
 
-/*
-|--------------------------------------------------------------------------
-| RUTAS PROTEGIDAS
-|--------------------------------------------------------------------------
-*/
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('/notificaciones', function () {
+        $notificaciones = auth()->user()->notificaciones()->latest()->get();
+        return view('notificaciones.index', compact('notificaciones'));
+    })->name('notificaciones.index');
 
     Route::post('/notificaciones/leidas', function () {
         auth()->user()->notificacionesNoLeidas()->update(['leida' => 1]);
@@ -71,41 +54,37 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/nueva-solicitud', [IncidenciaController::class, 'store'])->name('incidencias.store');
     Route::delete('/incidencias/{id}', [IncidenciaController::class, 'destroy'])->name('incidencias.destroy');
 
-    /*
-    |--------------------------------------------------------------------------
-    | ADMIN
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::get('/panel', [AdminController::class, 'index'])->name('panel');
         Route::post('/crear', [AdminController::class, 'crear'])->name('crear');
         Route::post('/actualizar/{id}', [AdminController::class, 'actualizar'])->name('actualizar');
-        Route::get('/editar/{id}', [AdminController::class, 'editar'])->name('editar');
-        Route::get('/cancelar/{id}', [AdminController::class, 'cancelar'])->name('cancelar');
+        Route::post('/cancelar/{id}', [AdminController::class, 'cancelar'])->name('cancelar');
         Route::post('/asignar-tecnico', [AdminController::class, 'asignarTecnico'])->name('asignarTecnico');
         Route::get('/calendario', [AdminController::class, 'calendario'])->name('calendario');
         Route::get('/liquidaciones', [AdminController::class, 'liquidaciones'])->name('liquidaciones');
-        Route::post('/comisiones/pagar', [AdminController::class, 'pagarComisiones'])->name('comisiones.pagar');
+        Route::post('/comisiones/liquidar', [AdminController::class, 'liquidarComisiones'])->name('comisiones.liquidar');
         Route::get('/users', [UserController::class, 'index'])->name('users');
+        Route::post('/users/create', [UserController::class, 'storeAdmin'])->name('users.store');
         Route::post('/users/{id}/update', [UserController::class, 'update'])->name('users.update');
+        Route::post('/users/{id}/delete', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/tecnicos', [AdminController::class, 'tecnicos'])->name('tecnicos');
+        Route::post('/tecnicos/create', [AdminController::class, 'storeTecnico'])->name('tecnicos.store');
+        Route::post('/tecnicos/{id}/update', [AdminController::class, 'updateTecnico'])->name('tecnicos.update');
+        Route::post('/tecnicos/{id}/baja', [AdminController::class, 'darDeBaja'])->name('tecnicos.baja');
+        Route::get('/servicios', [\App\Http\Controllers\EspecialidadController::class, 'index'])->name('servicios');
+        Route::post('/servicios', [\App\Http\Controllers\EspecialidadController::class, 'store'])->name('servicios.store');
+        Route::post('/servicios/bulk', [\App\Http\Controllers\EspecialidadController::class, 'bulk'])->name('servicios.bulk');
+        Route::post('/servicios/{id}/update', [\App\Http\Controllers\EspecialidadController::class, 'update'])->name('servicios.update');
+        Route::post('/servicios/{id}/delete', [\App\Http\Controllers\EspecialidadController::class, 'destroy'])->name('servicios.destroy');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | GESTORA
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('gestora')->name('gestora.')->middleware('role:gestora')->group(function () {
         Route::post('/asignar-tecnico', [AdminController::class, 'asignarTecnico'])->name('asignarTecnico');
         Route::get('/', [GestoraController::class, 'index'])->name('panel');
         Route::post('/crear', [GestoraController::class, 'crear'])->name('crear');
+        Route::post('/avisos/{id}/cancelar', [GestoraController::class, 'cancelarAviso'])->name('avisos.cancelar');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | TECNICO
-    |--------------------------------------------------------------------------
-    */
     Route::prefix('tecnico')->name('tecnico.')->middleware('role:tecnico')->group(function () {
         Route::get('/', [TecnicoController::class, 'index'])->name('panel');
         Route::post('/estado', [TecnicoController::class, 'cambiarEstado'])->name('estado');
