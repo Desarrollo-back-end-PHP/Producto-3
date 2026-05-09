@@ -8,6 +8,9 @@ class Incidencia extends Model
 {
     protected $table = 'incidencias';
 
+    const CREATED_AT = 'fecha_creacion';
+    const UPDATED_AT = 'fecha_actualizacion';
+
     protected $fillable = [
         'codigo',
         'usuario_id',
@@ -22,13 +25,11 @@ class Incidencia extends Model
         'fecha_servicio' => 'datetime',
     ];
 
-    // Relación con el usuario (cliente)
     public function usuario()
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
-    // Relación con el técnico
     public function tecnico()
     {
         return $this->belongsTo(User::class, 'tecnico_id');
