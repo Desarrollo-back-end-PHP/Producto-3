@@ -67,7 +67,7 @@ class AdminController extends Controller
             'tecnico_id'      => $request->tecnico_id ?: null,
         ]);
 
-        // 🔔 Notificación si ya se asigna técnico al crear
+        //  Notificación si ya se asigna técnico al crear
         if ($aviso->tecnico_id) {
             Notificacion::create([
                 'user_id' => $aviso->tecnico_id,
@@ -96,7 +96,7 @@ class AdminController extends Controller
             'estado',
         ]));
 
-        // 🔔 NOTIFICACIONES
+        //  NOTIFICACIONES
         if ($request->estado && $estadoAnterior !== $request->estado) {
             if ($aviso->tecnico_id) {
                 Notificacion::create([

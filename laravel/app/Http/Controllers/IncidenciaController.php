@@ -39,7 +39,6 @@ class IncidenciaController extends Controller
 
         $codigo = 'INC-' . strtoupper(uniqid());
 
-        // Crear incidencia del cliente
         Incidencia::create([
             'codigo'         => $codigo,
             'usuario_id'     => Auth::id(),
@@ -49,7 +48,6 @@ class IncidenciaController extends Controller
             'estado'         => 'pendiente',
         ]);
 
-        // Crear aviso visible para todos los roles
         Aviso::create([
             'codigo'          => $codigo,
             'usuario_id'      => Auth::id(),
@@ -85,8 +83,6 @@ class IncidenciaController extends Controller
         }
 
         $incidencia->update(['estado' => 'cancelada']);
-
-        // Cancelar también el aviso correspondiente
         Aviso::where('codigo', $incidencia->codigo)->update(['estado' => 'cancelada']);
 
         return redirect()->route('incidencias.index')
