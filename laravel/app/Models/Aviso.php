@@ -30,7 +30,7 @@ class Aviso extends Model
         'fecha' => 'datetime',
     ];
 
-    // 🔥 RELACIONES
+    //  RELACIONES
     public function especialidad()
     {
         return $this->belongsTo(Especialidad::class);
@@ -56,7 +56,7 @@ class Aviso extends Model
         return $this->hasOne(Comision::class);
     }
 
-    // 🔥 GENERADOR DE CÓDIGO
+    //  GENERADOR DE CÓDIGO
     public static function generarCodigo(): string
     {
         $fecha = now()->format('Ymd');
