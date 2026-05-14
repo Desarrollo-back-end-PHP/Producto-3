@@ -1,12 +1,6 @@
 {
-    "name": "anna/producto-2",
-    "authors": [
-        {
-            "name": "annahico",
-            "email": "annahico@gmail.com"
-        }
-    ],
-    "require-dev": {
-        "phpunit/phpunit": "^13.0"
+    "require": {
+        "laravel/framework": "^11.0",
+        "symfony/var-dumper": "^7.0"
     }
 }

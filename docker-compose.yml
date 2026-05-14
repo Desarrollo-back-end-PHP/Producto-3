@@ -1,84 +1,40 @@
 services:
-  # Servidor para el "Hola Mundo" 
-  apache-php:
-    image: php:8.2-apache
-    container_name: apache-php
-    restart: always 
+  laravel-p3:
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    container_name: laravel-p3
+    restart: always
     volumes:
-      - ./www:/var/www/html
+      - ./laravel:/var/www/html
     ports:
-      - "8080:80" 
+      - "8093:80"
     depends_on:
-      - db
+      - db-p3
 
-  # Base de Datos para Laravel y Apache-PHP
-  db:
+  db-p3:
     image: mysql:8.0
-    container_name: mysql-db
+    container_name: mysql-db-p3
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass  
-      MYSQL_DATABASE: mydb
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: reparaya
       MYSQL_USER: user
       MYSQL_PASSWORD: userpass
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_p3:/var/lib/mysql
 
-  # Servidor para Laravel 
-  laravel-app:              
-    image: php:8.2-apache
-    container_name: laravel-app
-    restart: always 
-    volumes:
-      - ./laravel:/var/www/html  
-    ports:
-      - "8082:80" 
-    depends_on:
-      - db
-
-  # PHPMyAdmin 
-  phpmyadmin:
+  phpmyadmin-p3:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always 
+    container_name: phpmyadmin-p3
+    restart: always
     ports:
-      - "8081:80" 
+      - "8094:80"
     environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: rootpass  
+      PMA_HOST: db-p3
+      MYSQL_ROOT_PASSWORD: rootpass
     depends_on:
-      - db
-
-  # WordPress 
-  wordpress:                
-    image: wordpress:latest 
-    container_name: wp_basic 
-    restart: always 
-    ports:                  
-      - "8085:80" # <--- CAMBIADO A 8085 para evitar el error de permisos
-    environment:            
-      WORDPRESS_DB_HOST: wp_db 
-      WORDPRESS_DB_USER: wordpress 
-      WORDPRESS_DB_PASSWORD: wordpress 
-      WORDPRESS_DB_NAME: wordpress 
-    volumes:                
-      - ./wordpress:/var/www/html 
-    depends_on:             
-      - wp_db               
-
-  # Base de Datos exclusiva para WordPress
-  wp_db:                    
-    image: mysql:8.0   
-    container_name: wp_db   
-    restart: always 
-    environment:            
-      MYSQL_ROOT_PASSWORD: rootpass 
-      MYSQL_DATABASE: wordpress 
-      MYSQL_USER: wordpress 
-      MYSQL_PASSWORD: wordpress 
-    volumes:                
-       - wp_db_data:/var/lib/mysql
+      - db-p3
 
 volumes:
-  db_data:    
-  wp_db_data:
+  db_data_p3:

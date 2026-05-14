@@ -1,2 +1,5 @@
 [App](http://localhost:8080/)
 [PhpMyAdmin](http://localhost:8081/)
+[Login admin](http://localhost:8080/index.php?url=auth/login)
+[Panel admin](http://localhost:8080/index.php?url=admin/index)
+[Calendario](http://localhost:8080/index.php?url=admin/calendario)
