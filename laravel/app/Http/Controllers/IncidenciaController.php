@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     namespace App\Http\Controllers;
 
@@ -16,7 +16,7 @@
         {
             $incidencias = Incidencia::where('usuario_id', Auth::id())
 
-                ->orderBy('fecha_creacion', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return view('cliente.mis_avisos', compact('incidencias'));
