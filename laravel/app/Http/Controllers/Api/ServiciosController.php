@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Aviso;
+use App\Models\Especialidad;
 
 class ServiciosController extends Controller
 {
@@ -31,6 +32,31 @@ class ServiciosController extends Controller
         return response()->json([
             'total_global' => $total,
             'zonas'        => $zonas,
+        ]);
+    }
+
+    public function avisos()
+    {
+        $avisos = Aviso::where('estado', 'finalizado')
+            ->with('especialidad')
+            ->orderBy('fecha', 'desc')
+            ->get()
+            ->map(function ($aviso) {
+                return [
+                    'codigo'       => $aviso->codigo,
+                    'fecha'        => $aviso->fecha ? $aviso->fecha->format('d/m/Y') : null,
+                    'zona'         => $aviso->zona,
+                    'urgencia'     => $aviso->urgencia,
+                    'estado'       => $aviso->estado,
+                    'especialidad' => $aviso->especialidad ? $aviso->especialidad->nombre : null,
+                    'descripcion'  => $aviso->descripcion,
+                    'precio'       => $aviso->precio,
+                ];
+            });
+
+        return response()->json([
+            'total'  => $avisos->count(),
+            'avisos' => $avisos,
         ]);
     }
 }
